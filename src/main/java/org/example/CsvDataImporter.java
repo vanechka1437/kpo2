@@ -1,13 +1,18 @@
 package org.example;
+
 import org.springframework.stereotype.Component;
-import java.io.BufferedReader;
-import java.io.FileReader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import java.io.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Component
 public class CsvDataImporter extends DataImporter {
+    private static final Logger logger = LoggerFactory.getLogger(CsvDataImporter.class);
+
     public CsvDataImporter(FinanceFacade facade) {
         super(facade);
     }
@@ -16,21 +21,35 @@ public class CsvDataImporter extends DataImporter {
     protected List<OperationDTO> parseFile(String filePath) {
         List<OperationDTO> result = new ArrayList<>();
         try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
-            String line = reader.readLine(); // skip header
+            String line = reader.readLine();
+
             while ((line = reader.readLine()) != null) {
+                if (line.trim().isEmpty()) continue;
+
                 String[] parts = line.split(",");
-                OperationDTO dto = new OperationDTO();
-                dto.type = OperationType.valueOf(parts[0]);
-                dto.accountId = Integer.parseInt(parts[1]);
-                dto.amount = Double.parseDouble(parts[2]);
-                dto.date = LocalDate.parse(parts[3]);
-                dto.description = parts[4];
-                dto.categoryId = Integer.parseInt(parts[5]);
-                result.add(dto);
+                if (parts.length < 6) {
+                    continue;
+                }
+
+                try {
+                    OperationDTO dto = new OperationDTO();
+                    dto.setType(OperationType.valueOf(parts[0].trim()));
+                    dto.setAccountId(UUID.fromString(parts[1].trim()));
+                    dto.setAmount(Double.parseDouble(parts[2].trim()));
+                    dto.setDate(LocalDate.parse(parts[3].trim()));
+                    dto.setDescription(parts[4].trim());
+                    dto.setCategoryId(UUID.fromString(parts[5].trim()));
+
+                    result.add(dto);
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         } catch (Exception e) {
-            throw new RuntimeException("Failed to parse CSV", e);
+            throw new RuntimeException("Ошибка при парсинге CSV-файла", e);
         }
         return result;
     }
+
 }

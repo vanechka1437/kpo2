@@ -1,11 +1,22 @@
 package org.example;
-import java.time.LocalDate;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import java.time.LocalDate;
+import java.util.UUID;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class OperationDTO {
-    public OperationType type;
-    public int accountId;
-    public double amount;
-    public LocalDate date;
-    public String description;
-    public int categoryId;
+    private OperationType type;
+    private UUID accountId;
+    private double amount;
+    private LocalDate date;
+    private String description;
+    private UUID categoryId;
 }

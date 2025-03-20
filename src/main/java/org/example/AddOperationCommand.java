@@ -1,32 +1,35 @@
 package org.example;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import java.time.LocalDate;
+import java.util.UUID;
 
 @Component
 public class AddOperationCommand implements Command {
     private final FinanceFacade facade;
-    private final OperationType type;
-    private final int accountId;
-    private final double amount;
-    private final LocalDate date;
-    private final String description;
-    private final int categoryId;
 
     @Autowired
-    public AddOperationCommand(FinanceFacade facade, OperationType type, int accountId, double amount,
-                               LocalDate date, String description, int categoryId) {
+    public AddOperationCommand(FinanceFacade facade) {
         this.facade = facade;
-        this.type = type;
-        this.accountId = accountId;
-        this.amount = amount;
-        this.date = date;
-        this.description = description;
-        this.categoryId = categoryId;
     }
 
     @Override
-    public void execute() {
+    public void execute(Object... args) {
+        if (args.length != 6) {
+            System.out.println("Error: Expected 6 arguments, received " + args.length);
+            throw new IllegalArgumentException("Expected 6 arguments: OperationType, UUID, double, LocalDate, String, UUID");
+        }
+
+        if (!(args[0] instanceof OperationType type) ||
+                !(args[1] instanceof UUID accountId) ||
+                !(args[2] instanceof Double amount) ||
+                !(args[3] instanceof LocalDate date) ||
+                !(args[4] instanceof String description) ||
+                !(args[5] instanceof UUID categoryId)) {
+            throw new IllegalArgumentException("Invalid argument types.");
+        }
+
         Operation op = facade.addOperation(type, accountId, amount, date, description, categoryId);
         System.out.println("Added operation ID: " + op.getId() + " Amount: " + op.getAmount());
     }

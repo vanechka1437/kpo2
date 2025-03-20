@@ -1,22 +1,27 @@
 package org.example;
-import org.springframework.stereotype.Component;
-import java.time.LocalDate;
 
-@Component
+import lombok.Getter;
+
+import java.time.LocalDate;
+import java.util.UUID;
+
 public class DomainFactory {
-    private static int bankAccountCounter = 1;
+    @Getter
     private static int categoryCounter = 1;
-    private static int operationCounter = 1;
 
     public static BankAccount createBankAccount(String name, double initialBalance) {
-        return new BankAccount(bankAccountCounter++, name, initialBalance);
+        return new BankAccount(name, initialBalance);
     }
 
     public static Category createCategory(OperationType type, String name) {
-        return new Category(categoryCounter++, type, name);
+        return new Category(type, name);
     }
 
-    public static Operation createOperation(OperationType type, int bankAccountId, double amount, LocalDate date, String description, int categoryId) {
-        return new Operation(operationCounter++, type, bankAccountId, amount, date, description, categoryId);
+    public static Operation createOperation(OperationType type, UUID bankAccountId, double amount, LocalDate date, String description, UUID categoryId) {
+        return new Operation(type, bankAccountId, amount, date, description, categoryId);
+    }
+
+    public static void setCategoryCounter(int categoryCounter) {
+        DomainFactory.categoryCounter = categoryCounter;
     }
 }
