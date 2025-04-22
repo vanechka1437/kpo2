@@ -1,71 +1,99 @@
-# Финансовый учет (ВШЭ-банк)
+# Zoo Management System
 
-## Описание проекта
-Данный проект реализует модуль **"Учет финансов"** для ВШЭ-банка.  
-Система позволяет пользователям управлять своими **счетами, категориями доходов и расходов**, а также анализировать **финансовые операции**.
+Веб-приложение для автоматизации бизнес-процессов зоопарка.  
+Реализовано в рамках учебного задания по курсу "Конструирование ПО".
 
-**Основной функционал:**  
-✅ Создание, редактирование и удаление **счетов, категорий и операций**  
-✅ Подсчет **разницы доходов и расходов** за период  
-✅ Группировка операций **по категориям**  
-✅ **Импорт и экспорт** данных в CSV, JSON, YAML  
-✅ **Аналитика и статистика по финансам**  
-✅ **Кеширование данных** для повышения производительности
+## Функциональность
 
----
+Реализованы следующие Use Case:
+- **Управление животными**:
+    - Добавление/удаление (POST/DELETE `/api/animals`)
+    - Просмотр информации (GET `/api/animals/{id}`)
+- **Управление вольерами**:
+    - Создание (POST `/api/enclosures`)
+    - Просмотр списка (GET `/api/enclosures`)
+- **Перемещение животных** (POST `/api/transfers`)
+- **Расписание кормлений**:
+    - Создание расписания (POST `/api/feeding`)
+    - Отметка о выполнении (POST `/api/feeding/{id}/complete`)
+- **Статистика зоопарка** (GET `/api/stats`)
 
-## Используемые технологии
+## Технологии
+
 - **Java 17**
-- **Spring Boot** (DI, JPA, REST)
-- **H2/PostgreSQL** (БД)
-- **Lombok** (для упрощения кода)
-- **Maven** (сборка проекта)
+- **Spring Boot 3.1.5**
+- **Swagger OpenAPI 3.0** (документация API)
+- **Maven** (сборка)
+- **In-memory хранилище** (H2 в режиме памяти)
 
----
+## Архитектура
 
-## Архитектурные принципы
+Проект структурирован согласно **Clean Architecture**:
 
-### **Принципы SOLID**
-Проект разрабатывался с учетом **SOLID**:
+```src/
+├── java/
+│ └── domain/
+│ ├── controllers/ 
+│ ├── dto/ 
+│ ├── infrastructure/ 
+│ ├── services/ 
+│ └── ZooApplication
+```
 
-| Принцип | Как реализовано? |
-|---------|-----------------|
-| **S** - Single Responsibility (Принцип единственной ответственности) | `BankAccountService`, `OperationService` и другие сервисы отвечают только за свою логику. |
-| **O** - Open/Closed (Принцип открытости/закрытости) | Для импорта/экспорта данных используется **шаблонный метод**, позволяющий легко добавлять новые форматы. |
-| **L** - Liskov Substitution (Принцип подстановки Барбары Лисков) | Все подклассы (`CsvDataImporter`, `JsonDataImporter`) корректно заменяют родительский класс `DataImporter`. |
-| **I** - Interface Segregation (Принцип разделения интерфейсов) | Разные интерфейсы для репозиториев, сервисов, фасадов. |
-| **D** - Dependency Inversion (Принцип инверсии зависимостей) | Используется Spring DI (`@Service`, `@Repository`, `@Autowired`). |
+### Принципы DDD:
+- **Value Objects**: `FoodType`, `EnclosureType`
+- **Агрегаты**: `Animal`, `Enclosure`, `FeedingSchedule`
+- **Доменные события**: `AnimalMovedEvent`, `FeedingTimeEvent`
+- **Инкапсуляция правил**:
+    - Проверка совместимости вольера при перемещении
+    - Валидация времени кормления
 
----
+## Запуск проекта
 
-### **Принципы GRASP**
-Проект учитывает **GRASP (General Responsibility Assignment Software Patterns)**:
+1. **Сборка**:
+```bash
+mvn clean install
+```
 
-| Принцип | Как реализовано? |
-|---------|-----------------|
-| **High Cohesion (Высокая связанность)** | `FinanceFacade` объединяет работу с доменной моделью. |
-| **Low Coupling (Слабая связанность)** | `OperationService`, `CategoryService` не зависят друг от друга напрямую. |
-| **Controller (Контроллер)** | REST-контроллеры (`AccountController`, `OperationController`) управляют взаимодействием. |
-| **Polymorphism (Полиморфизм)** | Шаблонный метод для импорта данных (`DataImporter`). |
-| **Pure Fabrication (Изолированное проектирование)** | `BankAccountProxy` кеширует данные и разгружает базу. |
+2. **Запуск**:
 
----
+```bash
+java -jar target/zoo-management-1.0.0.jar
+```
 
-## Используемые паттерны GoF
+3. **Документация API**: 
 
-| Паттерн         | Где используется? |
-|----------------|----------------|
-| **Фасад (Facade)** | Управление `BankAccount`, `Category`, `Operation` через `FinanceFacade`. |
-| **Команда (Command) + Декоратор (Decorator)** | Реализация пользовательских сценариев (`AddOperationCommand`) и измерение времени выполнения (`TimedCommandDecorator`). |
-| **Шаблонный метод (Template Method)** | Импорт данных (`DataImporter`, `CsvDataImporter`, `JsonDataImporter`). |
-| **Посетитель (Visitor)** | Экспорт данных (`ExportVisitor`). |
-| **Фабрика (Factory)** | Создание объектов (`DomainFactory`). |
-| **Прокси (Proxy)** | Кеширование данных о счетах (`BankAccountProxy`). |
+Откройте в браузере:
+http://localhost:8080/swagger-ui.html
 
----
+## Примеры запросов
+1. **Создание животного**:
+```bash
+curl -X POST http://localhost:8080/api/animals \
+  -H "Content-Type: application/json" \
+  -d '{
+    "species": "Predator",
+    "name": "Simba",
+    "birthDate": "2020-01-15",
+    "gender": "Male",
+    "favoriteFood": "Meat"
+  }'
+```
+2. **Получение статистики**:
+```bash
+curl -X GET http://localhost:8080/api/stats
+```
 
-## Установка и запуск
-### 1. **Клонирование проекта**
-```sh
-git clone https://github.com/your-repo/finance-tracker.git
-cd finance-tracker
+## Применённые концепции
+
+| Принцип                             | Как реализовано?                                                                 |
+|-------------------------------------|----------------------------------------------------------------------------------|
+| **Независимость Domain слоя**       | Классы `Animal`, `Enclosure`, `FeedingSchedule` не содержат аннотаций Spring.    |
+| **Зависимости через интерфейсы**    | Сервисы используют `AnimalRepository`, `EnclosureRepository` (интерфейсы).      |
+| **Изоляция бизнес-логики**          | Правила перемещения животных реализованы в `Animal.moveToEnclosure()`.           |
+| **Слоистая архитектура**            | Чёткое разделение на Domain/Application/Infrastructure/Presentation слои.       |
+| **Value Objects (DDD)**             | `FoodType`, `EnclosureType` — иммутабельные объекты с валидацией.               |
+| **Доменные события (DDD)**          | `AnimalMovedEvent` генерируется при изменении вольера.                          |
+| **Инкапсуляция правил (DDD)**       | `Enclosure.addAnimal()` проверяет вместимость перед добавлением.                |
+| **Dependency Inversion (SOLID)**    | Сервисы зависят от абстракций (`FeedingScheduleRepository`), а не реализаций.   |
+| **Single Responsibility (SOLID)**   | `AnimalTransferService` отвечает только за перемещение животных.                |
